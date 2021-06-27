@@ -11,11 +11,13 @@ Each item takes precedence over the item below it:
 5. key/value store
 6. defaults
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 
-class Viper:
+class Viper:  # pylint: disable=too-many-instance-attributes
     """
     Viper is a prioritized configuration registry
     It maintains a set of configuration sources, fetches values to populate those,
@@ -64,25 +66,67 @@ class Viper:
         self._allow_empty_env: bool = False
         self._automatic_env_applied: bool = False
         self._config: Dict[str, Any] = {}
+        self._override: Dict[str, Any] = {}
+        self._defaults: Dict[str, Any] = {}
+        self._kvstore: Dict[str, Any] = {}
+        self._pflags: Dict[str, Any] = {}
+        self._env: Dict[str, Any] = {}
+        self._aliases: Dict[str, Any] = {}
+        self._type_by_default_value: bool = False
+
+    def option(self, option_func: Option):
+        """applies callable option to Viper instance"""
+        option_func(self)
 
 
-class StringReplacer(ABC):
+class Option:  # pylint: disable=too-few-public-methods
+    """Callable class used to apply option settings to a Viper instance via closures
+
+    see https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html
+    and https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis.
+    """
+
+    def __init__(self, option_func: Callable[[Viper], Any]):
+        self._option_func = option_func
+
+    def __call__(self, viper: Viper):
+        # the Option may access a protected member of the Viper instance
+        # in order to stay consistent with the Go API, where
+        # attributes are private to a particular package, not a class
+        self._option_func(viper)
+
+
+def key_delimiter(delimiter: str) -> Option:
+    """sets the delimiter used for determining key parts"""
+
+    def _key_delimiter(viper: Viper):
+        viper._key_delim = delimiter  # pylint: disable=protected-access
+
+    return Option(_key_delimiter)
+
+
+class StringReplacer(ABC):  # pylint: disable=too-few-public-methods
     """applies a set of replacements to a string"""
 
     @abstractmethod
-    def replace(self, s: str) -> str:
+    def replace(self, s: str) -> str:  # p pylint: disable=invalid-name
         """returns a copy of s with all replacements performed"""
 
 
-class Error(ABC, Exception):
+class ViperError(ABC, Exception):
+    """wraps exceptions with a custom message"""
+
     def __init__(self, err: Exception):
         self.err = err
+        super().__init__(self)
 
     @abstractmethod
     def __str__(self):
         pass
 
 
-class ConfigMarshalError(Error):
+class ConfigMarshalError(ViperError):
+    """failure to marshal config into a writer"""
+
     def __str__(self):
         return f"While marshaling config: {self.err}"

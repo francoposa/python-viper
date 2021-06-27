@@ -4,6 +4,9 @@ version = "0.1.0a1"
 description = "Python configuration with fangs! A Python port of github.com/spf13/viper"
 authors = ["francoposa <franco@francoposa.io>"]
 license = "MIT"
+packages = [
+    { include = "viper"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
