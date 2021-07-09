@@ -16,6 +16,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional
 
+from viper.core.flag import ClickFlag, Flag
+
 
 class Viper:  # pylint: disable=too-many-instance-attributes
     """
@@ -69,7 +71,7 @@ class Viper:  # pylint: disable=too-many-instance-attributes
         self._override: Dict[str, Any] = {}
         self._defaults: Dict[str, Any] = {}
         self._kvstore: Dict[str, Any] = {}
-        self._pflags: Dict[str, Any] = {}
+        self._flags: Dict[str, Flag] = {}
         self._env: Dict[str, Any] = {}
         self._aliases: Dict[str, Any] = {}
         self._type_by_default_value: bool = False
@@ -109,24 +111,9 @@ class StringReplacer(ABC):  # pylint: disable=too-few-public-methods
     """applies a set of replacements to a string"""
 
     @abstractmethod
-    def replace(self, s: str) -> str:  # p pylint: disable=invalid-name
-        """returns a copy of s with all replacements performed"""
+    def replace(self, string: str) -> str:  # pylint: disable=invalid-name
+        """returns a copy of string with all replacements performed"""
 
 
-class ViperError(ABC, Exception):
-    """wraps exceptions with a custom message"""
-
-    def __init__(self, err: Exception):
-        self.err = err
-        super().__init__(self)
-
-    @abstractmethod
-    def __str__(self):
-        pass
-
-
-class ConfigMarshalError(ViperError):
-    """failure to marshal config into a writer"""
-
-    def __str__(self):
-        return f"While marshaling config: {self.err}"
+def bind_click_flag(viper: Viper, key: str, flag: ClickFlag):
+    pass

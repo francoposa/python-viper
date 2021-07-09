@@ -82,7 +82,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 name = "click"
 version = "8.0.1"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -93,7 +93,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -459,7 +459,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ab97ae7f23e9154dc7e7d144d93e200f74f70441cc4c085b1619fa783ce8047f"
+content-hash = "20063d65603a6baaaf5c52b9d934ce398fe80610697b429b85c31953f05c48fd"
 
 [metadata.files]
 appdirs = [
