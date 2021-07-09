@@ -5,7 +5,6 @@ from typing import List, Optional, Type
 
 import click
 
-from viper.core.error import ViperError
 from viper.core.source import Source
 
 
