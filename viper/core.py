@@ -16,14 +16,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional
 
-from viper.core.flag import ClickFlag, Flag
+from viper.option import ClickOption, Option
 
 
 class Viper:  # pylint: disable=too-many-instance-attributes
-    """
-    Viper is a prioritized configuration registry
-    It maintains a set of configuration sources, fetches values to populate those,
-    and provides them according to the source's priority.
+    """Viper is a in-process prioritized configuration registry
+
+    Viper maintains a set of configuration sources and retrieves values
+     from them according to the source's priority.
     The priority of the sources is the following:
     1. overrides
     2. flags
@@ -71,49 +71,53 @@ class Viper:  # pylint: disable=too-many-instance-attributes
         self._override: Dict[str, Any] = {}
         self._defaults: Dict[str, Any] = {}
         self._kvstore: Dict[str, Any] = {}
-        self._flags: Dict[str, Flag] = {}
+        self._flags: Dict[str, Option] = {}
         self._env: Dict[str, Any] = {}
         self._aliases: Dict[str, Any] = {}
         self._type_by_default_value: bool = False
 
-    def option(self, option_func: Option):
+    def config(self, config_func: Config):
         """applies callable option to Viper instance"""
-        option_func(self)
+        config_func(self)
 
 
-class Option:  # pylint: disable=too-few-public-methods
-    """Callable class used to apply option settings to a Viper instance via closures
+ConfigFunc = Callable[[Viper], Any]
+
+
+class Config:  # pylint: disable=too-few-public-methods
+    """Config is a Callable used to apply configuration to a Viper instance via closures
 
     see https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html
     and https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis.
+
+    The Config may access a "protected" member of the Viper instance
+    in order to stay relatively consistent with the Go API, where
+    attributes are private to a particular package, not a class
     """
 
-    def __init__(self, option_func: Callable[[Viper], Any]):
-        self._option_func = option_func
+    def __init__(self, config_func: ConfigFunc):
+        self._config_func = config_func
 
     def __call__(self, viper: Viper):
-        # the Option may access a protected member of the Viper instance
-        # in order to stay consistent with the Go API, where
-        # attributes are private to a particular package, not a class
-        self._option_func(viper)
+        self._config_func(viper)
 
 
-def key_delimiter(delimiter: str) -> Option:
+def key_delimiter(delimiter: str) -> Config:
     """sets the delimiter used for determining key parts"""
 
     def _key_delimiter(viper: Viper):
         viper._key_delim = delimiter  # pylint: disable=protected-access
 
-    return Option(_key_delimiter)
+    return Config(_key_delimiter)
 
 
 class StringReplacer(ABC):  # pylint: disable=too-few-public-methods
-    """applies a set of replacements to a string"""
+    """StringReplacer applies a set of replacements to a string"""
 
     @abstractmethod
     def replace(self, string: str) -> str:  # pylint: disable=invalid-name
         """returns a copy of string with all replacements performed"""
 
 
-def bind_click_flag(viper: Viper, key: str, flag: ClickFlag):
+def bind_click_flag(viper: Viper, key: str, flag: ClickOption):
     pass
