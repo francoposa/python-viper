@@ -30,6 +30,23 @@ class Option(ABC):
         pass
 
 
+class ClickOption:
+    def __init__(self, name: str, option: click.Option):
+        self.name = name
+        _is_click_option(option, raise_err=True)
+        self.option = option
+
+    @property
+    def source(self) -> Source:
+        ctx: click.Context = click.get_current_context()
+        click_source = ctx.get_parameter_source(self.option.name)
+
+    @property
+    def value_string(self) -> str:
+        ctx: click.Context = click.get_current_context()
+        return str(ctx.params[self.name])
+
+
 def lookup_click_option(command: click.Command, key: str) -> ClickOption:
     click_params: List[click.Parameter] = command.params
     # here we assume click internals force unique parameter names and
@@ -57,23 +74,6 @@ def _is_click_option(flag: click.Parameter, raise_err=False) -> bool:
     if not is_valid and raise_err:
         raise ClickOptionInvalidError()
     return is_valid
-
-
-class ClickOption:
-    def __init__(self, name: str, option: click.Option):
-        self.name = name
-        _is_click_option(option, raise_err=True)
-        self.option = option
-
-    @property
-    def source(self) -> Source:
-        ctx: click.Context = click.get_current_context()
-        click_source = ctx.get_parameter_source(self.option.name)
-
-    @property
-    def value_string(self) -> str:
-        ctx: click.Context = click.get_current_context()
-        return str(ctx.params[self.name])
 
 
 class ClickOptionInvalidError(TypeError):
