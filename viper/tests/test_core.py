@@ -1,24 +1,24 @@
 import click
+from click.testing import Result
 
-from viper.core import Viper
-from viper.option import lookup_click_option
-
-
-@click.command()
-@click.option("--option", default=1, help="an integer option")
-@click.argument("argument")
-def cmd(option, argument):
-    click.echo(f"option: {option}")
-    click.echo(f"argument: {argument}")
-
+from viper.core import bind_option, Viper
+from viper.option import lookup_click_option, Option
 
 viper = Viper()
 
 
-def main():
-    lookup_click_option(cmd, "option")
-    cmd()
+@click.command()
+@click.argument("argument")
+@click.option("--option", default=0, help="an integer option")
+def cmd(argument, option):
+    click.echo(argument)
+    viper_option: str = viper.get("option")
+    click.echo(viper_option)
+    click.echo(option)
 
 
-if __name__ == "__main__":
-    main()  # pylint disable=no-value-for-parameter
+def test_cmd(cli_runner):
+    click_option: Option = lookup_click_option(cmd, "option")
+    bind_option(viper, "option", click_option)
+    result: Result = cli_runner.invoke(cmd, args=["argument", "--option", "1"])
+    assert result.output.splitlines() == ["argument", "1", "1"]

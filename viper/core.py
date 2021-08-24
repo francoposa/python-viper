@@ -16,7 +16,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional
 
-from viper.option import ClickOption, Option
+import click
+
+from viper.option import lookup_click_option, Option
 
 
 class Viper:  # pylint: disable=too-many-instance-attributes
@@ -71,7 +73,7 @@ class Viper:  # pylint: disable=too-many-instance-attributes
         self._override: Dict[str, Any] = {}
         self._defaults: Dict[str, Any] = {}
         self._kvstore: Dict[str, Any] = {}
-        self._flags: Dict[str, Option] = {}
+        self._options: Dict[str, Option] = {}
         self._env: Dict[str, Any] = {}
         self._aliases: Dict[str, Any] = {}
         self._type_by_default_value: bool = False
@@ -79,6 +81,12 @@ class Viper:  # pylint: disable=too-many-instance-attributes
     def config(self, config_func: Config):
         """applies callable option to Viper instance"""
         config_func(self)
+
+    def get(self, key: str) -> Any:
+        option: Optional[Option] = self._options.get(key)
+        if not option:
+            return None
+        return option.value_string
 
 
 ConfigFunc = Callable[[Viper], Any]
@@ -119,5 +127,7 @@ class StringReplacer(ABC):  # pylint: disable=too-few-public-methods
         """returns a copy of string with all replacements performed"""
 
 
-def bind_click_flag(viper: Viper, key: str, flag: ClickOption):
-    pass
+def bind_option(viper: Viper, key: str, option: Option):
+    # if not isinstance(option, Option):
+    #     raise TypeError("option must implement Option interface")
+    viper._options[key.lower()] = option
